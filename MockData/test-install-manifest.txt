@@ -1,0 +1,28 @@
+{
+    "name": "mochj",
+    "tag": "0.0.5",
+    "description": "A sample package installing mochj",
+    "downloadManifest": {
+      "uri": "https://dl.dropboxusercontent.com/s/8k8e6v0cqxd4qkd/mochj.zip?dl=1",
+      "remote": true,
+      "dest": "C:/zzzzz_staging/mochj.zip"
+    },
+    "unzipManifests": [
+      {
+        "src": "C:/zzzzz_staging/mochj.zip",
+        "dest": "C:/zzzzz_packages/mochj",
+        "createDestIfNotExists": true
+      }
+    ],
+    "runManifests": [
+      {
+        "cmd": "C:/zzzzz_packages/mochj/mochj/RunTests.bat Package",
+        "ignoreOnFail": false,
+        "exitCodeSuccess": [
+          0
+        ],
+        "stage": 0,
+	"showLogs": true
+      }
+    ]
+  }

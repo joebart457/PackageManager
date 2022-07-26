@@ -1,0 +1,27 @@
+{
+    "name": "string",
+    "tag": "string",
+    "description": "string",
+    "downloadManifest": {
+      "uri": "string",
+      "remote": true,
+      "dest": "string"
+    },
+    "unzipManifests": [
+      {
+        "src": "string",
+        "dest": "string",
+        "createDestIfNotExists": true
+      }
+    ],
+    "runManifests": [
+      {
+        "cmd": "string",
+        "ignoreOnFail": true,
+        "exitCodeSuccess": [
+          0
+        ],
+        "stage": 0
+      }
+    ]
+  }

@@ -1,0 +1,42 @@
+11:37 AM 7/20/2022====================================================================
+
+FROM https://downloads/package.zip?dl=1
+UNZIP "package.zip" "$Dest$"
+@IGNOREFAIL RUN "$Dest$/package.exe"
+OR 'CHECKEXISTS "$bin$/mochj"' ''
+
+---or---
+
+{
+	name: "Test Package",
+	tag: "0.0.1",
+	description: "An example package.",
+	from: {
+		uri: "https://downloads/package.zip?dl=1",
+		remote: true
+	}
+	unzip: [
+		{
+			src: "package.zip",
+			dest: "./package",
+			createifnotexists: true,
+		},
+	],
+	run: [
+		{
+			stage: 1,
+			ignorefail: true,
+			cmd: "$dest$/package.exe",
+		}
+	]
+}
+
+---or---
+
+(from "https://downloads/package.zip?dl=1"
+	(defn
+		(unzip "package.zip" "./package")
+		(run "$dest$/package.exe" --ignorefail true)
+	)
+)
+
