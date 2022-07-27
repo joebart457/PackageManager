@@ -13,12 +13,16 @@ namespace PM
 		static void Main(string[] args)
 		{
 			var main = CommandBuilder.CommandGroup("cpm")
+				.ShowHelpIfUnresolvable()
 				.Group("install")
 					.Verb()
+					.Description("the name of the package to install, filepath of the local package manifest, or remote url of the package manifest")
 					.Option("l", "latest")
+						.WithDescription("use 'latest' as the tag value")
 						.WithValidator(s => s is not null)
 						.IsFlag()
 					.Option("t", "tag")
+						.WithDescription("the tag value of the package name. cannot be used when filepath or remote url is specified")
 						.WithValidator(s => s is not null)
 						.WithDefault("")
 					.Action(args =>
@@ -40,8 +44,43 @@ namespace PM
 
 						return 0;
 					})
+				.Group("describe")
+					.SubGroup(
+						CommandBuilder.CommandGroup("package")
+							.Verb()
+							.Description("the name of the package, filepath of local package manifest, or remote url of the package manifest")
+							.Option("t", "tag")
+								.WithDescription("used together with the package name to determine which package to describe. cannot be used when filepath or remote url is specified")
+								.WithDefault("")
+							.Action(args =>
+                            {
+								string uri = args.Verb<string>();
+								string tag = args.ValueOf("t", "tag");
+								if (string.IsNullOrEmpty(tag))
+                                {
+									var t = PackageManagerService.DescribePackage(uri);
+									t.Wait();
+                                } else
+                                {
+									var t = PackageManagerService.DescribePackage(uri, tag);
+									t.Wait();
+                                }
+								return 0;
+                            })
+					)
+				.Group("rm")
+					.Verb()
+					.Option("t", "tag")
+						.Required()
+					.Action(args =>
+                    {
+						var t = PackageManagerService.DeleteManifestFromRemote(args.Verb<string>(), args.ValueOf("t", "tag"));
+						t.Wait();
+						return 0;
+                    })
 				.Group("ls")
 					.Verb("packages")
+					.Description("lists all available packages")
 					.Action(args =>
 					{
 						var task = PackageManagerService.ListAllPackages();
@@ -49,6 +88,7 @@ namespace PM
 						return 0;
 					})
 					.Verb("remote")
+					.Description("displays the current configured remote package server")
 					.Action(args =>
 					{
 						try
@@ -65,6 +105,7 @@ namespace PM
 					.SubGroup(
 						CommandBuilder.CommandGroup("tags")
 							.Verb()
+							.Description("lists all tags for the specified package name")
 							.Action(args =>
 							{
 								string name = args.Verb<string>();
@@ -75,6 +116,7 @@ namespace PM
 					)
 				.Group("push")
 					.Verb()
+					.Description("uploads the local (or remote) package to the currently configured remote package server")
 					.Action(args =>
 					{
 						var t = PackageManagerService.PushManifestToRemote(args.Verb<string>());
@@ -85,6 +127,7 @@ namespace PM
 					.SubGroup(
 						CommandBuilder.CommandGroup("remote")
 							.Verb()
+							.Description("configures the remote url")
 							.Action(args =>
                             {
                                 try
@@ -103,7 +146,7 @@ namespace PM
 				);
             try
             {
-				main.Resolve(args);
+				main.Execute(args);
 			}
 			catch (Exception ex)
             {

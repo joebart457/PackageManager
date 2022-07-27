@@ -33,7 +33,7 @@ namespace PM.Extensions
                 if (finalObject == null) throw new Exception($"unable to convert response to valid package object. Response was {result}");
                 return finalObject;
             }
-            throw new Exception($"unable to retrieve resource at {uri.OriginalString}");
+            throw new Exception($"received [Status:{response?.StatusCode}] when attempting to retrieve resource at {uri.OriginalString}");
         }
     }
 }

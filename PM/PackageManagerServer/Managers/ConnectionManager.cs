@@ -11,7 +11,7 @@ namespace PackageManagerServer.Managers
 
     public class ConnectionManager
     {
-        private string _dbFileName = "data.db";
+        private string _dbFileName = "/usr/local/PackageManagerServer/data.db";
         private SqliteConnection _connection { get; set; }
 
         public ConnectionManager(string filename = "")
@@ -61,6 +61,21 @@ namespace PackageManagerServer.Managers
                 sbWhere.AppendLine($"{identity.Name} = @{identity.Name} {(identity == identities.Last() ? "" : " AND ")}");
             }
             cmd.CommandText = $"UPDATE {typeof(Ty).Name} SET {sbUpdate} WHERE {sbWhere}";
+
+            return cmd.ExecuteNonQuery();
+        }
+
+        public int Delete<Ty>(Ty data) where Ty : class
+        {
+            var cmd = _connection.CreateCommand();
+            var identities = typeof(Ty).GetProperties()
+                .Where(prop => Attribute.IsDefined(prop, typeof(IdentityAttribute))).ToList();
+
+            foreach (var prop in identities)
+            {
+                cmd.Parameters.AddWithValue($"@{prop.Name}", prop.GetValue(data));
+            }
+            cmd.CommandText = $"DELETE FROM {typeof(Ty).Name} WHERE {string.Join(" AND ", identities.Select(id => $"{id.Name}=@{id.Name}"))}";
 
             return cmd.ExecuteNonQuery();
         }

@@ -93,6 +93,21 @@ namespace PM.Services
             }
         }
 
+        public static async Task DeleteManifestFromRemote(string name, string tag)
+        {
+            try
+            {
+                LoggerService.Log($".removing manifest from {ConfigService.GetConfig("baseUrl")}");
+                await PackageManagerClient.DeleteAsync(name, tag);
+                LoggerService.Log($".deleted package {name}:{tag} from remote", LogSeverity.SUCCESS);
+            }
+            catch (Exception ex)
+            {
+                LoggerService.Log($"Unexpected error occurred", LogSeverity.ERROR, true);
+                LoggerService.Log($"ERROR -- {ex.Message}", LogSeverity.ERROR, true);
+            }
+        }
+
         public static async Task GetPackageWithLogging(string name, string tag)
         {
             try
@@ -106,6 +121,65 @@ namespace PM.Services
             {
                 LoggerService.Log($"Unexpected error occurred retrieving package JSON", LogSeverity.ERROR, true);
                 LoggerService.Log($"ERROR -- {ex.Message}", LogSeverity.ERROR, true);
+            }
+        }
+
+        public static async Task DescribePackage(string name, string tag)
+        {
+            try
+            {
+                var manifest = await PackageManagerClient.GetAsync(name, tag);
+                DescribePackage(manifest);
+            }
+            catch (Exception ex)
+            {
+                LoggerService.Log($"Unexpected error", LogSeverity.ERROR, true);
+                LoggerService.Log($"ERROR -- {ex.Message}", LogSeverity.ERROR, true);
+            }
+        }
+
+        public static async Task DescribePackage(string uri)
+        {
+            try
+            {
+                var manifest = await GetManifestFromResource(uri);
+                DescribePackage(manifest);
+            }
+            catch (Exception ex)
+            {
+                LoggerService.Log($"Unexpected error", LogSeverity.ERROR, true);
+                LoggerService.Log($"ERROR -- {ex.Message}", LogSeverity.ERROR, true);
+            }
+        }
+        private static void DescribePackage(PackageManifest manifest)
+        {
+            if (manifest == null) throw new ArgumentNullException(nameof(manifest));
+            LoggerService.Log($"Name: {manifest.Name}", force: true);
+            LoggerService.Log($"Tag: {manifest.Tag}", force: true);
+            LoggerService.Log($"Description: {manifest.Description}", force: true);
+            LoggerService.Log($"Download Manifest:", force: true);
+            LoggerService.Log($"    Uri: {manifest.DownloadManifest?.Uri}", force: true);
+            LoggerService.Log($"    Remote: {manifest.DownloadManifest?.Remote}", force: true);
+            LoggerService.Log($"    Remote: {manifest.DownloadManifest?.Dest}", force: true);
+            LoggerService.Log($"Unzip Manifests:", force: true);
+            foreach (var unzip in manifest.UnzipManifests ?? new List<UnzipManifest>())
+            {
+                LoggerService.Log($"  [", force: true);
+                LoggerService.Log($"    Source: {unzip.Src}", force: true);
+                LoggerService.Log($"    Destination: {unzip.Dest}", force: true);
+                LoggerService.Log($"    Create destination if not exists: {unzip.CreateDestIfNotExists}", force: true);
+                LoggerService.Log($"  ]", force: true);
+            }
+            LoggerService.Log($"Run Manifests:", force: true);
+            foreach (var run in manifest.RunManifests?.OrderBy(x => x.Stage).ToList() ?? new List<RunManifest>())
+            {
+                LoggerService.Log($"  [", force: true);
+                LoggerService.Log($"    Stage: {run.Stage}", force: true);
+                LoggerService.Log($"    Command: {run.Cmd}", force: true);
+                LoggerService.Log($"    Success exit codes: {string.Join(',', run.ExitCodeSuccess)}", force: true);
+                LoggerService.Log($"    Show Logs: {run.ShowLogs}", force: true);
+                LoggerService.Log($"    Continue on failure: {run.IgnoreOnFail}", force: true);
+                LoggerService.Log($"  ]", force: true);
             }
         }
 
@@ -181,7 +255,7 @@ namespace PM.Services
         {
             if (string.IsNullOrWhiteSpace(manifest.Uri)) throw new ArgumentNullException(manifest.Uri);
             if (!Directory.Exists(Path.GetDirectoryName(manifest.Dest))) {
-                Directory.CreateDirectory(Path.GetDirectoryName(manifest.Dest));
+                Directory.CreateDirectory(Path.GetDirectoryName(manifest.Dest) ?? "");
             }
             if (!manifest.Remote)
             {

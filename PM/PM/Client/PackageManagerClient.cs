@@ -34,6 +34,19 @@ namespace PM.Client
             response.EnsureSuccessStatusCode();
         }
 
+        private static async Task SendDeleteRequestAsync(string resourceUri)
+        {
+            HttpClient httpClient = new HttpClient();
+            var request = new HttpRequestMessage
+            {
+                Method = HttpMethod.Delete,
+                RequestUri = new Uri($"{_baseUrl}{resourceUri}"),
+            };
+
+            var response = await httpClient.SendAsync(request).ConfigureAwait(false);
+            response.EnsureSuccessStatusCode();
+        }
+
         public static async Task<PackageManifest> GetAsync(string name, string tag)
         {
             return await SendGetRequestAsync<PackageManifest>($"/packages/{name}/tag/{tag}");
@@ -52,6 +65,11 @@ namespace PM.Client
         public static async Task PostAsync(PackageManifest manifest)
         {
             await SendPostRequestAsync($"/packages", manifest);
+        }
+
+        public static async Task DeleteAsync(string name, string tag)
+        {
+            await SendDeleteRequestAsync($"/packages/{name}/tag/{tag}");
         }
 
     }

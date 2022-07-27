@@ -41,12 +41,14 @@ namespace PackageManagerServer.Controllers
         {
             try
             {
-                return Ok(ContextService.Connection.Select<PackageEntity>()
-                    .Where(x => !string.IsNullOrWhiteSpace(x?.Data) && 
+                var package = ContextService.Connection.Select<PackageEntity>()
+                    .Where(x => !string.IsNullOrWhiteSpace(x?.Data) &&
                                 x?.Name == name &&
                                 x?.Tag == tag)
                     .Select(x => JsonConvert.DeserializeObject<PackageManifest>(x.Data))
-                    .Where(x => x is not null).FirstOrDefault());
+                    .Where(x => x is not null).FirstOrDefault();
+                if (package == null) return NotFound();
+                return Ok(package);
             }
             catch (Exception ex)
             {
@@ -90,6 +92,21 @@ namespace PackageManagerServer.Controllers
             catch (Exception ex)
             {
                 return Conflict(ex.Message);
+            }
+        }
+
+        [HttpDelete()]
+        [Route("packages/{name}/tag/{tag}")]
+        public ActionResult Delete([FromRoute] string name, [FromRoute] string tag)
+        {
+            try
+            {
+                var package = ContextService.Connection.Delete(new PackageEntity { Guid = $"{name}:{tag}", Name = name, Tag = tag });
+                return Ok();
+            }
+            catch (Exception ex)
+            {
+                return BadRequest(ex);
             }
         }
     }
