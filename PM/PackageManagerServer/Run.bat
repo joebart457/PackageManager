@@ -1,0 +1,1 @@
+docker run -it -p 4444:80 -v C:/tmp/safelist:/usr/local/safelist joebart457/package-manager-server:0.0.1

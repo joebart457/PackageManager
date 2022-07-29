@@ -11,7 +11,7 @@ namespace PackageManagerServer.Managers
 
     public class ConnectionManager
     {
-        private string _dbFileName = "/usr/local/PackageManagerServer/data.db";
+        private string _dbFileName = "data.db";
         private SqliteConnection _connection { get; set; }
 
         public ConnectionManager(string filename = "")
@@ -80,6 +80,7 @@ namespace PackageManagerServer.Managers
             return cmd.ExecuteNonQuery();
         }
 
+
         public int Insert<Ty>(Ty data) where Ty : class
         {
             var cmd = _connection.CreateCommand();
@@ -109,7 +110,7 @@ namespace PackageManagerServer.Managers
                 Ty data = new Ty();
                 foreach (var prop in properties)
                 {
-                    prop.SetValue(data, reader.GetValue(reader.GetOrdinal(prop.Name)));
+                    prop.SetValue(data, Convert.ChangeType(reader.GetValue(reader.GetOrdinal(prop.Name)), prop.PropertyType));
                 }
                 yield return data;
             }

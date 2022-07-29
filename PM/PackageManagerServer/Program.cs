@@ -1,5 +1,7 @@
 
+using PackageManagerServer.Models.Entities;
 using PackageManagerServer.Services;
+using PackageManagerServer.Web;
 
 namespace PackageManagerServer;
 
@@ -7,7 +9,7 @@ internal class Program
 {
     static void Main(string[] args)
     {
-        ContextService.CreateContext();
+        ContextService.BuildSafeListConnection("/usr/local/safelist/data.db");
 
         var builder = WebApplication.CreateBuilder(args);
 
@@ -28,7 +30,7 @@ internal class Program
         }
 
         //app.UseHttpsRedirection();
-
+        app.UseMiddleware<AdminSafeListMiddleware>(ContextService.SafeListConnection.Select<IpEntryEntity>().Select(e => e.IpAddress).ToList());
         app.UseAuthorization();
 
         app.MapControllers();
